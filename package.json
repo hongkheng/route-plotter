@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "rm -f bundle.js && webpack-dev-server --progress",
+    "start": "npm run build && http-server",
+    "start-dev": "webpack-dev-server --progress",
+    "build": "rm -f bundle.js && webpack --progress",
     "test": "exit 1"
   },
   "repository": {
@@ -27,6 +29,7 @@
     "babel-preset-stage-1": "^6.5.0",
     "babel-runtime": "^6.9.2",
     "css-loader": "^0.23.1",
+    "http-server": "^0.9.0",
     "react": "^15.1.0",
     "react-dom": "^15.1.0",
     "webpack": "^1.13.1"
