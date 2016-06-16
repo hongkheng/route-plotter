@@ -2,7 +2,7 @@ import React from 'react'
 
 import MapRenderer from './map-renderer'
 import CoordinatesList from './coordinates-list'
-import PathResult from './path-result'
+import RetrievePlot from './retrieve-plot'
 
 /*
 [
@@ -16,6 +16,7 @@ export default class RoutePlotter extends React.Component {
     super(props)
     this.state = {
       input: null,
+      waypoints: null,
       points: null,
       polyline: null
     }
@@ -27,7 +28,10 @@ export default class RoutePlotter extends React.Component {
       const directions = renderer.getDirections()
       console.log(directions)
       const {overview_path, overview_polyline} = directions.routes[0]
+      let {origin, destination, waypoints} = directions.request
+      waypoints = [origin, ...waypoints.map((point) => point.location), destination]
       this.setState({
+        waypoints: waypoints.map((point) => [point.lat(), point.lng()]),
         points: overview_path.map((point) => [point.lat(), point.lng()]),
         polyline: overview_polyline
       })
@@ -35,8 +39,8 @@ export default class RoutePlotter extends React.Component {
     this.directionsRenderer = renderer
   }
 
-  updateCoordinates (val) {
-    const inputData = JSON.parse(val)
+  updateCoordinates (input) {
+    const inputData = JSON.parse(input)
     this.setState({input: inputData})
 
     const directionsService = new google.maps.DirectionsService()
@@ -65,9 +69,8 @@ export default class RoutePlotter extends React.Component {
           onMount={this.setRenderer.bind(this)}/>
         <CoordinatesList
           onUpdate={this.updateCoordinates.bind(this)} />
-        {this.state.points && this.state.polyline && <PathResult
-          points={this.state.points}
-          polyline={this.state.polyline} />}
+        {this.state.waypoints && <RetrievePlot
+          {...this.state} />}
       </div>
     )
   }
