@@ -6,9 +6,15 @@ import RetrievePlot from './retrieve-plot'
 
 /*
 [
-[1.3521939999999999, 103.9455123000000185],
-[1.3051229114645768, 103.8776444624268152],
-[1.2988445000000000, 103.7867622999999639]
+[1.352194, 103.945512],
+[1.305412, 103.889355],
+[1.278959, 103.839253],
+[1.298845, 103.786762],
+[1.341795, 103.735204],
+[1.360917, 103.844595],
+[1.439465, 103.841945],
+[1.451828, 103.791793],
+[1.418731, 103.696728]
 ]
 */
 
@@ -31,27 +37,42 @@ export default class RoutePlotter extends React.Component {
     const inputData = JSON.parse(input)
     const directionsService = new google.maps.DirectionsService()
     const inputLatLng = inputData.map((coordinates) => new google.maps.LatLng(...coordinates))
-    this.setState({query: inputData, result: []})
+    this.setState({query: inputData})
+
+    this.updateQueue = Promise.resolve()
+
+    let updateDirections = (renderer, origin, destination, waypoints) => {
+      const update = () => {
+        const request = {
+          origin, destination, waypoints,
+          travelMode: google.maps.TravelMode.DRIVING,
+          avoidHighways: false,
+          avoidTolls: false
+        }
+
+        return new Promise((resolve, reject) => {
+          directionsService.route(request, (result, status) => {
+            if (status === google.maps.DirectionsStatus.OK) {
+              renderer.setDirections(result)
+              setTimeout(resolve, 300)
+            } else {
+              console.log(status, result)
+              reject()
+            }
+          })
+        })
+      }
+
+      this.updateQueue = this.updateQueue.then(update)
+    }
+
+    updateDirections = updateDirections.bind(this)
 
     if (this.directionsRenderers) {
       this.directionsRenderers.forEach(renderer => { renderer.setMap(null) })
     }
-
-    function updateDirections (renderer, origin, destination, waypoints) {
-      const request = {
-        origin, destination, waypoints,
-        travelMode: google.maps.TravelMode.DRIVING,
-        avoidHighways: false,
-        avoidTolls: false
-      }
-
-      directionsService.route(request, (result, status) => {
-        if (status !== google.maps.DirectionsStatus.OK) return
-        renderer.setDirections(result)
-      })
-    }
-
     this.directionsRenderers = []
+    this.state.result = []
 
     for (let i = 0; i < inputLatLng.length - 1; i++) {
       const renderer = new google.maps.DirectionsRenderer({
@@ -71,7 +92,7 @@ export default class RoutePlotter extends React.Component {
         const directions = renderer.getDirections()
         console.log(directions)
         const {origin: currentOrigin, destination: currentDestination} = directions.request
-        if (i > 0 && currentOrigin !== lastOrigin.lat()) {
+        if (i > 0 && currentOrigin !== lastOrigin) {
           lastOrigin = currentOrigin
           const directions = this.directionsRenderers[i - 1].getDirections()
           const {origin, waypoints} = directions.request
@@ -86,9 +107,10 @@ export default class RoutePlotter extends React.Component {
         this.setState({result: this.state.result})
       }
 
-      updateDirections(renderer, inputLatLng[i], inputLatLng[i + 1])
+      updateDirections(renderer, lastOrigin, lastDestination)
 
       this.directionsRenderers.push(renderer)
+      this.state.result.push([lastOrigin, lastDestination])
     }
   }
 

@@ -12,13 +12,9 @@ export default class RetrievePlot extends React.Component {
   };
 
   render () {
-    let points = []
-    let lastPoint
-    for (let leg of this.props.result) {
-      lastPoint = leg.pop()
-      points = points.concat(leg)
-    }
-    points.push(lastPoint)
+    let points = this.props.result.reduce((allPoints, somePoints) => (
+      allPoints.concat(somePoints)
+    ), [])
     const polyline = google.maps.geometry.encoding.encodePath(points)
     points = points.map((point) => [point.lat(), point.lng()])
 
