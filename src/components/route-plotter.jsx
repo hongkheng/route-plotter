@@ -66,8 +66,6 @@ export default class RoutePlotter extends React.Component {
       this.updateQueue = this.updateQueue.then(update)
     }
 
-    updateDirections = updateDirections.bind(this)
-
     if (this.directionsRenderers) {
       this.directionsRenderers.forEach(renderer => { renderer.setMap(null) })
     }
@@ -91,6 +89,7 @@ export default class RoutePlotter extends React.Component {
       renderer.directions_changed = () => {
         const directions = renderer.getDirections()
         console.log(directions)
+        this.state.result[i] = directions.routes[0].overview_path
         const {origin: currentOrigin, destination: currentDestination} = directions.request
         if (i > 0 && currentOrigin !== lastOrigin) {
           lastOrigin = currentOrigin
@@ -102,9 +101,9 @@ export default class RoutePlotter extends React.Component {
           const directions = this.directionsRenderers[i + 1].getDirections()
           const {destination, waypoints} = directions.request
           updateDirections(this.directionsRenderers[i + 1], currentDestination, destination, waypoints)
+        } else {
+          this.setState({result: this.state.result})
         }
-        this.state.result[i] = directions.routes[0].overview_path
-        this.setState({result: this.state.result})
       }
 
       updateDirections(renderer, lastOrigin, lastDestination)

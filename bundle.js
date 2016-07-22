@@ -20493,8 +20493,6 @@
 	        _this2.updateQueue = _this2.updateQueue.then(update);
 	      };
 
-	      updateDirections = updateDirections.bind(this);
-
 	      if (this.directionsRenderers) {
 	        this.directionsRenderers.forEach(function (renderer) {
 	          renderer.setMap(null);
@@ -20520,6 +20518,7 @@
 	        renderer.directions_changed = function () {
 	          var directions = renderer.getDirections();
 	          console.log(directions);
+	          _this2.state.result[i] = directions.routes[0].overview_path;
 	          var _directions$request = directions.request;
 	          var currentOrigin = _directions$request.origin;
 	          var currentDestination = _directions$request.destination;
@@ -20540,9 +20539,9 @@
 	            var _waypoints = _directions2$request.waypoints;
 
 	            updateDirections(_this2.directionsRenderers[i + 1], currentDestination, destination, _waypoints);
+	          } else {
+	            _this2.setState({ result: _this2.state.result });
 	          }
-	          _this2.state.result[i] = directions.routes[0].overview_path;
-	          _this2.setState({ result: _this2.state.result });
 	        };
 
 	        updateDirections(renderer, lastOrigin, lastDestination);
